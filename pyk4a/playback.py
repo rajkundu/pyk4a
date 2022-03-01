@@ -39,9 +39,10 @@ class Configuration(TypedDict):
 
 
 class PyK4APlayback:
-    def __init__(self, path: Union[str, Path], thread_safe: bool = True):
+    def __init__(self, path: Union[str, Path], thread_safe: bool = True, force_bgra32: bool = False):
         self._path: Path = Path(path)
         self.thread_safe = thread_safe
+        self.force_bgra32 = force_bgra32
         self._handle: Optional[object] = None
         self._length: Optional[int] = None
         self._calibration_json: Optional[str] = None
@@ -165,9 +166,10 @@ class PyK4APlayback:
             capture_handle=capture_handle,
             color_format=self.configuration["color_format"],
             thread_safe=self.thread_safe,
+            force_bgra32 = self.force_bgra32
         )
 
-    def get_previouse_capture(self):
+    def get_previous_capture(self):
         self._validate_is_open()
         result, capture_handle = k4a_module.playback_get_previous_capture(self._handle, self.thread_safe)
         self._verify_stream_error(result)
@@ -176,6 +178,7 @@ class PyK4APlayback:
             capture_handle=capture_handle,
             color_format=self.configuration["color_format"],
             thread_safe=self.thread_safe,
+            force_bgra32 = self.force_bgra32
         )
 
     def _validate_is_open(self):

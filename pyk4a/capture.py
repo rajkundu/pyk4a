@@ -1,6 +1,7 @@
 from typing import Optional
 
 import numpy as np
+import cv2
 
 from .calibration import Calibration
 from .config import ImageFormat
@@ -13,14 +14,24 @@ from .transformation import (
     depth_image_to_point_cloud,
 )
 
+def convert_to_bgra_if_required(color_format: ImageFormat, color_image):
+    if color_format == ImageFormat.COLOR_MJPG:
+        color_image = cv2.imdecode(color_image, cv2.IMREAD_COLOR)
+        print(color_image.shape)
+    elif color_format == ImageFormat.COLOR_NV12:
+        color_image = cv2.cvtColor(color_image, cv2.COLOR_YUV2BGRA_NV12)
+    elif color_format == ImageFormat.COLOR_YUY2:
+        color_image = cv2.cvtColor(color_image, cv2.COLOR_YUV2BGRA_YUY2)
+    return color_image
 
 class PyK4ACapture:
     def __init__(
-        self, calibration: Calibration, capture_handle: object, color_format: ImageFormat, thread_safe: bool = True
+        self, calibration: Calibration, capture_handle: object, color_format: ImageFormat, thread_safe: bool = True, force_bgra32: bool = False
     ):
         self._calibration: Calibration = calibration
         self._capture_handle: object = capture_handle  # built-in PyCapsule
         self.thread_safe = thread_safe
+        self.force_bgra32 = force_bgra32
         self._color_format = color_format
 
         self._color: Optional[np.ndarray] = None
@@ -154,10 +165,13 @@ class PyK4ACapture:
     def transformed_color(self) -> Optional[np.ndarray]:
         if self._transformed_color is None and self.depth is not None and self.color is not None:
             if self._color_format != ImageFormat.COLOR_BGRA32:
-                raise RuntimeError(
-                    "color color_image must be of color_format K4A_IMAGE_FORMAT_COLOR_BGRA32 for "
-                    "transformation_color_image_to_depth_camera"
-                )
+                if self.force_bgra32:
+                    self._color = convert_to_bgra_if_required(self._color_format, self.color)
+                else:
+                    raise RuntimeError(
+                        "color color_image must be of color_format K4A_IMAGE_FORMAT_COLOR_BGRA32 for "
+                        "transformation_color_image_to_depth_camera; alternatively, use force_bgra32 flag"
+                    )
             self._transformed_color = color_image_to_depth_camera(
                 self.color, self.depth, self._calibration, self.thread_safe
             )

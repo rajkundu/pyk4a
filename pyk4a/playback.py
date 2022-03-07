@@ -166,7 +166,7 @@ class PyK4APlayback:
             capture_handle=capture_handle,
             color_format=self.configuration["color_format"],
             thread_safe=self.thread_safe,
-            force_bgra = self.force_bgra
+            force_bgra=self.force_bgra
         )
 
     def get_previous_capture(self):
@@ -178,7 +178,7 @@ class PyK4APlayback:
             capture_handle=capture_handle,
             color_format=self.configuration["color_format"],
             thread_safe=self.thread_safe,
-            force_bgra = self.force_bgra
+            force_bgra=self.force_bgra
         )
 
     def _validate_is_open(self):

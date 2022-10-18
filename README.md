@@ -15,6 +15,29 @@ It also simplifies usage. Kinect C api image buffers are directly reused and ima
 
 Homepage: https://github.com/etiennedub/pyk4a/
 
+## Changes vs. [`etiennedub/pyk4a`](https://github.com/etiennedub/pyk4a/)
+This fork was initially created to address https://github.com/etiennedub/pyk4a/issues/164. However, rather than the changes made in this fork, use of the following code (see [here](https://github.com/etiennedub/pyk4a/issues/164#issuecomment-1234687511)) is recommended instead:
+```python
+playback = pyk4a.PyK4APlayback('Path/To/Recording.mkv')
+playback.open()
+
+while True:
+	# Get next capture
+	try:
+		capture = playback.get_next_capture()
+	except EOFError:
+		break
+
+	# Convert MJPG color image to BGRA32
+	capture._color = cv2.cvtColor(cv2.imdecode(capture.color, cv2.IMREAD_COLOR), cv2.COLOR_BGR2BGRA)
+	capture._color_format = pyk4a.ImageFormat.COLOR_BGRA32
+	
+	# Now the capture object can be used as if it were originally recorded in BGRA32 format
+	capture.transformed_color # e.g. this property can be accessed without error
+
+playback.close()
+```
+
 ## Prerequisites
 The [Azure-Kinect-Sensor-SDK](https://github.com/microsoft/Azure-Kinect-Sensor-SDK) is required to build this library.
 To use the SDK, refer to the installation instructions [here](https://github.com/microsoft/Azure-Kinect-Sensor-SDK).
